@@ -1,122 +1,201 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const GymTrackerApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class GymTrackerApp extends StatelessWidget {
+  const GymTrackerApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: 'Gym Tracker',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const ExerciseTrackerPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class ExerciseEntry {
+  ExerciseEntry({
+    required this.name,
+    required this.sets,
+    required this.reps,
+    required this.weightKg,
+    required this.date,
+    this.completed = false,
+  });
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  final String name;
+  final int sets;
+  final int reps;
+  final double weightKg;
+  final DateTime date;
+  bool completed;
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class ExerciseTrackerPage extends StatefulWidget {
+  const ExerciseTrackerPage({super.key});
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  State<ExerciseTrackerPage> createState() => _ExerciseTrackerPageState();
+}
+
+class _ExerciseTrackerPageState extends State<ExerciseTrackerPage> {
+  final List<ExerciseEntry> _entries = [
+    ExerciseEntry(
+      name: 'Press banca',
+      sets: 4,
+      reps: 8,
+      weightKg: 60,
+      date: DateTime.now(),
+    ),
+    ExerciseEntry(
+      name: 'Sentadilla',
+      sets: 4,
+      reps: 10,
+      weightKg: 80,
+      date: DateTime.now(),
+    ),
+  ];
+
+  void _openCreateDialog() {
+    final nameController = TextEditingController();
+    final setsController = TextEditingController();
+    final repsController = TextEditingController();
+    final weightController = TextEditingController();
+
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Nuevo ejercicio'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Ejercicio'),
+                ),
+                TextField(
+                  controller: setsController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Series'),
+                ),
+                TextField(
+                  controller: repsController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Repeticiones'),
+                ),
+                TextField(
+                  controller: weightController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Peso (kg)'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                final sets = int.tryParse(setsController.text.trim());
+                final reps = int.tryParse(repsController.text.trim());
+                final weight = double.tryParse(weightController.text.trim());
+
+                if (name.isEmpty || sets == null || reps == null || weight == null) {
+                  return;
+                }
+
+                setState(() {
+                  _entries.add(
+                    ExerciseEntry(
+                      name: name,
+                      sets: sets,
+                      reps: reps,
+                      weightKg: weight,
+                      date: DateTime.now(),
+                    ),
+                  );
+                });
+
+                Navigator.pop(context);
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final completed = _entries.where((entry) => entry.completed).length;
+
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('Tracker de Gym'),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Card(
+              child: ListTile(
+                leading: const Icon(Icons.fitness_center),
+                title: Text('Ejercicios: ${_entries.length}'),
+                subtitle: Text('Completados hoy: $completed'),
+              ),
             ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: _entries.isEmpty
+                ? const Center(child: Text('Todavía no agregaste ejercicios.'))
+                : ListView.builder(
+                    itemCount: _entries.length,
+                    itemBuilder: (context, index) {
+                      final entry = _entries[index];
+                      return CheckboxListTile(
+                        value: entry.completed,
+                        onChanged: (value) {
+                          setState(() {
+                            entry.completed = value ?? false;
+                          });
+                        },
+                        title: Text(entry.name),
+                        subtitle: Text(
+                          '${entry.sets} series • ${entry.reps} reps • ${entry.weightKg.toStringAsFixed(1)} kg',
+                        ),
+                        secondary: IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () {
+                            setState(() {
+                              _entries.removeAt(index);
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openCreateDialog,
+        icon: const Icon(Icons.add),
+        label: const Text('Agregar'),
+      ),
     );
   }
 }
